@@ -374,6 +374,10 @@ impl<T> ProcessHandle<T> {
         self.process.stderr.as_mut()
     }
 
+    pub fn try_wait(&mut self) -> io::Result<Option<process::ExitStatus>> {
+        self.process.try_wait()
+    }
+
     fn wait(&mut self) {
         self.process.wait().ok();
         self.state.exited.store(true, Ordering::SeqCst);
@@ -493,6 +497,13 @@ impl<T> JoinHandle<T> {
             Ok(JoinHandleInner::Process(ref mut process)) => process.stderr(),
             Ok(JoinHandleInner::Pooled(..)) => None,
             Err(_) => None,
+        }
+    }
+
+    pub fn try_wait(&mut self) -> io::Result<Option<process::ExitStatus>> {
+        match self.inner {
+            Ok(JoinHandleInner::Process(ref mut process)) => process.try_wait(),
+            _ => Ok(None),
         }
     }
 }
